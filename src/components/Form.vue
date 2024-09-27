@@ -193,7 +193,21 @@ const writeData = async () => {
   await completeMappedFieldIdsValue()
 
   // ## mode1: 全部记录
-  const RecordList = await view.getVisibleRecordIdList()
+  const RecordList = await (async (table) => {
+    let recordIdData;
+    let token = undefined;
+    // setLoading(true);
+    const recordIdList = []
+    do {
+      recordIdData = await table.getVisibleRecordIdListByPage(token ? { pageToken: token, pageSize: 200 } : { pageSize: 200 });
+      token = recordIdData.pageToken;
+      // setLoadingTip(`${((token > 200 ? (token - 200) : 0) / recordIdData.total * 100).toFixed(2)}%`)
+      recordIdList.push(...recordIdData.recordIds)
+
+    } while (recordIdData.hasMore);
+    // setLoading(false);
+    return recordIdList
+  })(view)
 
   // ## model2: 交互式选择记录 
   // const RecordList = await bitable.ui.selectRecordIdList(tableId, viewId);
